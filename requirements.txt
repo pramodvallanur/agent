@@ -1,0 +1,5 @@
+panel
+bokeh
+hvplot
+bokeh_sampledata
+Swarm @ git+https://github.com/openai/swarm.git
