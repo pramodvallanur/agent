@@ -10,9 +10,9 @@ os.environ["OPENAI_API_KEY"] = "" # Replace with your key
 client = Swarm()
 
 def get_ingredients(food, quantity):
-    """Get the ingredients for a particular food item and it's quantity"""
+    """Get the ingredients for a food and it's quantity"""
     print(f"Getting ingredients for {food} with quantity {quantity}")
-    return {"salt": 100, "sugar": 100}
+    return {"salt": 50, "sugar": 50}
 
 def procure_ingredients(ingredient, quantity):
     """Place an order to procure the ingredient with the given quantity"""
@@ -30,9 +30,9 @@ def get_lead_time_to_prepare_and_deliver_food(food):
     return "1 hour"
 
 def check_inventory(ingredient, quantity):
-    """Check the inventory for the ingredient and the quantity."""
+    """Check the inventory for the ingredient with the given quantity."""
     print(f"Check inventory for {ingredient} and {quantity}")
-    return True
+    return False
     # if ingredient == "salt" and quantity == str(100):
     #     print("Salt is available")
     #     return True
@@ -40,7 +40,7 @@ def check_inventory(ingredient, quantity):
     # return False
 
 def generate_quote(food, quantity, address, datetime):
-    """Generate a quote for a particular food and quantity delivered to a particular address by a particular time to send it to customer"""
+    """Generate a quote for a food with quantity, to deliver it to a address by a particular time"""
     print(f"Generating quote for {food} with quantity {quantity} at {address} on {datetime}")
     return f"{quantity} of {food} to be delivered to: {address} by: {datetime} costs: 100 $"
 
@@ -64,11 +64,11 @@ def can_deliver(delivery_time, order_time, lead_time_to_procure_prepare_and_deli
     return result
 
 def schedule_for_delivery():
-    """Return a delivery agent which helps in delivery of the food."""
+    """A delivery agent which helps in delivery of the food."""
     return delivery_partner_agent
 
 def find_best_delivery_partner(address, delivery_time):
-    """Find the best delivery partner to deliver food to the address by the delivery time"""
+    """Return the best delivery partner to deliver food to the address by the delivery time"""
     print(f"Selecting best Delivery partner to deliver package to the {address} by the {delivery_time}")
     return "UPS"
 
@@ -77,24 +77,37 @@ def create_label_for_delivery_partner(delivery_partner):
     print(f"Creating shipping label for {delivery_partner}")
     return "Delivery Label created."
 
-context_variables = {
-    'customer_name': None,  # Initialize customer name to None
-    'last_order_id': None,
-}
+def create_opportunity(amount, request_message, email_id, status):
+    """Creates a new opportunity in CRM with possible status as "Pending Assessment", "Confirmed" or "Not Feasible"."""
+    print(f"Creating an Opportunity for {email_id} with {request_message} for {amount} with status: {status}")
+    return "Opportunity Create with opportunity id=123"
+
+def update_opportunity(opportunity_id, status):
+    """Updates the opportunity in CRM with status as either "Confirmed" or "Not Feasible"."""
+    print(f"Updating Opportunity  {opportunity_id} with status {status}")
+    return "Opportunity updated in the CRM"
 
 # # Define the Central Agent
 central_agent = Agent(
     name="Bakery Agent",
-    instructions="You are assisting the owner of the bakery in processing of the requests. When an request is received, ensure all aspects of the order— from product preparation to delivery—are managed efficiently. Notify only the owner if the request cannot be fulfilled by delivery time. Notify the customer to confirm the request with quote, if it can be fulfilled. Once fulfilled prepare for deliver the food.",
-    functions=[get_ingredients, check_inventory, generate_quote, get_lead_time_to_procure_ingredient, procure_ingredients, get_lead_time_to_prepare_and_deliver_food, notify_owner, notify_customer, can_deliver, schedule_for_delivery]
+    # instructions="You assist the owner of the bakery in  processing of the purchasing requests and create, update and manage the CRM records across each stage of request processing.  When an request is received, ensure all aspects of the order— from product preparation to delivery—are managed efficiently. This includes verifying inventory, preparing the items in time, and coordinating delivery to meet the agreed deadline. Notify only the owner if the request cannot be fulfilled by delivery time. Notify the customer to confirm the request with quote, if it can be fulfilled. Once the quote is sent to the customer, schedule the delivery of the food.",
+    instructions="You assist the owner of the bakery in orchestrating and track the requests in CRM.  Notify only the owner if the request cannot be delivered by delivery time. Notify the customer to with quote, if the request can be delivered before requested delivery time. If the request can be delivered before requested delivery time schedule for delivery of the food.",
+    functions=[get_ingredients, check_inventory, generate_quote, get_lead_time_to_procure_ingredient, procure_ingredients, get_lead_time_to_prepare_and_deliver_food, notify_owner, notify_customer, can_deliver, schedule_for_delivery, create_opportunity, update_opportunity]
 )
 
 delivery_partner_agent = Agent(
     name="Delivery Partner Agent",
     instructions="Finds out the best delivery partner to deliver food and creates label for the delivery partner.",
     functions=[find_best_delivery_partner, create_label_for_delivery_partner],
-    model="gpt-4o"
+    model="gpt-4o",
+    temperature=0.9
 )
+
+context_variables = {
+    'customer_name': None,  # Initialize customer name to None
+    'last_order_id': None,
+}
+
 pn.extension(design="material")
 
 chat_interface = pn.chat.ChatInterface()
